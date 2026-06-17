@@ -1,0 +1,5 @@
+.markdown-preview-view pre,
+.markdown-rendered pre {
+    display: table !important;
+    max-width: 100% !important;
+}

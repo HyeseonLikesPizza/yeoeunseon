@@ -1,0 +1,5 @@
+.markdown-preview-view .el-table,
+.markdown-rendered .el-table {
+    width: fit-content !important;
+    max-width: 100%;
+}
