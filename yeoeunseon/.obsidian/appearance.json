@@ -1,4 +1,9 @@
 {
   "cssTheme": "Baseline",
-  "textFontFamily": "Pretendard"
+  "textFontFamily": "Pretendard",
+  "enabledCssSnippets": [
+    "table-style",
+    "fonts",
+    "codeblock-fitcontent"
+  ]
 }
