@@ -11,10 +11,14 @@
             "id": "8e75e282614484b0",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "그래프 뷰"
+              "type": "markdown",
+              "state": {
+                "file": "임혜선/클로드 바이브코딩 코드 파악법.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "클로드 바이브코딩 코드 파악법"
             }
           }
         ]
@@ -176,8 +180,10 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "185ec6781c43be6c",
+  "active": "8e75e282614484b0",
   "lastOpenFiles": [
+    "작업일지.md",
+    "임혜선/ㅇㄹㄴㅇㄹ.md",
     "윤여민/Unreal/Async, ThreadPool.md",
     "윤여민/Unreal",
     "임혜선/클로드 바이브코딩 코드 파악법.md",
@@ -185,7 +191,6 @@
     "임혜선/ECDIS_Route_Planning.md",
     "임혜선/ECDIS_XTD_구현.md.tmp.27076.d008d46bd304",
     "윤여민/ㄹㄴㅇㄴㄹㄶ.md",
-    "임혜선/ㅇㄹㄴㅇㄹ.md",
     "윤여민/ㅋㅋ",
     "임혜선/ㅋㅋ",
     "조은정",
