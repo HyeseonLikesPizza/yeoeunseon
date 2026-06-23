@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "d3108f00df31a2f6",
+        "id": "49093cec0a295f5a",
         "type": "tabs",
         "children": [
           {
-            "id": "8e75e282614484b0",
+            "id": "08e11c511a33435e",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "그래프 뷰"
+              "type": "markdown",
+              "state": {
+                "file": "윤여민/Unreal/Reflection.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Reflection"
             }
           }
         ]
@@ -176,22 +180,33 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "185ec6781c43be6c",
+  "active": "08e11c511a33435e",
   "lastOpenFiles": [
-    "윤여민/Unreal/Async, ThreadPool.md",
-    "윤여민/Unreal",
+    "무제 1.base",
+    "2026-06-23.md",
+    "무제.base",
+    "무제 3.canvas",
+    "윤여민/Unreal/GC.md",
+    "무제 2.canvas",
+    "무제 1.canvas",
+    "무제.canvas",
+    "윤여민/Unreal/Reflection.md",
     "임혜선/클로드 바이브코딩 코드 파악법.md",
+    "윤여민/Unreal/Async & ThreadPool.md",
+    "윤여민/Unreal/무제.md",
+    "윤여민/Unreal/무제",
+    "언리얼 엔진Async, ThreadPool.md",
+    "윤여민/ㄹㄴㅇㄴㄹㄶ.md",
+    "윤여민/Interview",
+    "윤여민/Unreal",
+    "윤여민/C++",
+    "윤여민/Computer Science",
     "임혜선/ECDIS_XTD_구현.md",
     "임혜선/ECDIS_Route_Planning.md",
     "임혜선/ECDIS_XTD_구현.md.tmp.27076.d008d46bd304",
-    "윤여민/ㄹㄴㅇㄴㄹㄶ.md",
     "임혜선/ㅇㄹㄴㅇㄹ.md",
     "윤여민/ㅋㅋ",
     "임혜선/ㅋㅋ",
-    "조은정",
-    "새 폴더",
-    "임혜선",
-    "윤여민",
     "환영합니다!.md"
   ]
 }
