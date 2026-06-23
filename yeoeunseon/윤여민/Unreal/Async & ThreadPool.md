@@ -33,7 +33,7 @@ flowchart LR
 
 `UObject`는 단순한 C++ 객체가 아니다. [[GC]]와 [[Reflection]] 시스템이 생명주기, 프로퍼티, 타입 정보를 추적하는 Unreal 런타임 객체다.
 
-Worker Thread에서 UObject를 직접 읽거나 수정하면 항상 즉시 크래시가 나는 것은 아니지만, 다음 문제가 발생할 수 있다.
+Worker Thread에서 UObject를 직접 읽거나 수정하면 매번 바로 실패하지는 않더라도, 다음 문제가 발생할 수 있다.
 
 ```mermaid
 flowchart TD
@@ -114,6 +114,7 @@ Async(EAsyncExecution::ThreadPool, [WeakActor, StartLocation]()
 
 > [!tip]
 > 람다에 `AActor*`를 그대로 캡처하면, 비동기 작업이 끝나기 전에 Actor가 삭제됐을 때 위험하다. `TWeakObjectPtr`로 캡처하고 GameThread에서 `IsValid()`를 확인하는 습관이 안전하다.
+> 단, `TWeakObjectPtr`을 쓴다고 해서 Worker Thread에서 UObject를 역참조해도 된다는 뜻은 아니다.
 
 ---
 
