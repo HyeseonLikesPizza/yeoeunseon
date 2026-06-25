@@ -1,5 +1,5 @@
 ---
-tags: [Unreal, GC, 최적화, 메모리관리]
+tags: [unreal-engine, cpp, memory-management, garbage-collection, uobject]
 created: 2026-06-23
 ---
 
