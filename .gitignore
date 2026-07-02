@@ -1,3 +1,5 @@
 
-# obsidian 
+# obsidian - 개인 세션 상태 (창 배치·열린 노트 등, 공유 X)
 workspace.json
+workspace-mobile.json
+.obsidian/cache
