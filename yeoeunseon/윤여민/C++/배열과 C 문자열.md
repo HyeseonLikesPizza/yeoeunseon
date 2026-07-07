@@ -330,4 +330,4 @@ void PrintNumbers(std::span<const int> Numbers)
 
 ---
 
-[[char 포인터]]
+[[C++ 정리 목차]] · [[char 포인터]]

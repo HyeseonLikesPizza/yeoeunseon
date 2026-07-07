@@ -169,4 +169,4 @@ UObject 상태는 GameThread 중심으로 관리되므로 Worker Thread에서 �
 
 ---
 
-[[GC]] · [[Async & ThreadPool]] · [[CSharp Reflection|C# Reflection]]
+[[Unreal 정리 목차]] · [[GC]] · [[Async & ThreadPool]] · [[CSharp Reflection|C# Reflection]] · [[Unity와 Unreal 비교 기준]]

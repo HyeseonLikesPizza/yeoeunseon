@@ -316,4 +316,4 @@ mutex가 실제 병목           → 검증된 Lock-Free 구현 검토
 - [C++ Working Draft: Lock-free Property](https://eel.is/c++draft/atomics.lockfree)
 - [C++ Working Draft: Progress Guarantee](https://eel.is/c++draft/basic.exec)
 
-[[Cache Locality]] · [[Async & ThreadPool]]
+[[C++ 정리 목차]] · [[Cache Locality]] · [[Async & ThreadPool]]
