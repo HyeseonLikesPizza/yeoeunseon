@@ -1,7 +1,7 @@
 ---
 tags: [unreal-engine, cpp, concurrency, async, thread-pool]
 created: 2026-06-23
-updated: 2026-06-29
+updated: 2026-07-06
 ---
 
 # Async와 ThreadPool
@@ -10,12 +10,25 @@ updated: 2026-06-29
 > Unreal Engine에서 비동기 작업을 사용할 때 가장 중요한 원칙은 **UObject는 기본적으로 Thread-Safe하지 않다**는 점이다.
 > 무거운 계산이나 파일 I/O는 Worker Thread에서 처리하고, 계산이 끝난 결과만 GameThread로 돌려보내 UObject에 반영해야 한다.
 
-> [!note]
-> 이 글은 UE5 계열의 일반적인 사용 원칙을 설명한다. 실제 프로젝트에서는 사용하는 엔진 버전의 API와 스레드 안전성 문서를 함께 확인한다.
+## 기본 흐름
+
+```text
+GameThread
+→ UObject에서 필요한 값 복사
+→ Worker Thread에서 순수 계산
+→ GameThread로 결과 전달
+→ UObject 유효성 확인 후 반영
+```
+
+> **Worker에서는 계산만, UObject 접근은 GameThread에서.**
+
+---
 
 ## 왜 Async와 ThreadPool이 필요한가
 
-`GameThread`는 Tick, 게임 로직, Actor/Component 처리, UI 갱신처럼 프레임마다 필요한 일을 담당한다. 여기에 오래 걸리는 계산이나 파일 처리가 끼어들면 프레임이 밀리고 화면이 멈춘 것처럼 보일 수 있다.
+`GameThread`는 Tick, 게임 로직, Actor/Component 처리, UI 갱신처럼 프레임마다 필요한 일을 담당한다.
+
+여기에 오래 걸리는 계산이나 파일 처리가 끼어들면 프레임이 밀리고 화면이 멈춘 것처럼 보일 수 있다.
 
 ```mermaid
 flowchart LR
@@ -135,9 +148,11 @@ Async(EAsyncExecution::ThreadPool, [WeakActor, StartLocation]()
 | **GameThread** | Tick, 게임 로직, Actor/Component 생성과 삭제, UI 수정 | 가능 |
 | **Worker Thread** | 무거운 계산, 파일 I/O, 압축/파싱 등 순수 작업 | 직접 조작 금지 |
 
-ThreadPool을 쓰면 스레드 생성 비용을 줄이고 여러 비동기 작업을 효율적으로 나눠 처리할 수 있다. 다만 작업 수가 너무 많거나 각 작업이 너무 오래 걸리면 ThreadPool 자체가 포화될 수 있으므로, 작업 단위를 너무 잘게 쪼개거나 무한 대기 작업을 넣는 것은 피해야 한다.
+ThreadPool을 쓰면 스레드 생성 비용을 줄이고 여러 비동기 작업을 효율적으로 나눠 처리할 수 있다.
 
-특히 오래 막히는 파일 I/O나 네트워크 대기를 공용 ThreadPool에 많이 넣으면 계산 작업까지 기다릴 수 있다. 장시간 블로킹 작업은 엔진이 제공하는 비동기 I/O 기능이나 용도에 맞는 별도 실행 경로가 있는지 먼저 확인한다.
+다만 작업 수가 너무 많거나 각 작업이 너무 오래 걸리면 ThreadPool 자체가 포화될 수 있다. 작업 단위를 너무 잘게 쪼개거나 무한 대기 작업을 넣는 것은 피해야 한다.
+
+오래 막히는 파일 I/O나 네트워크 대기를 공용 ThreadPool에 많이 넣으면 계산 작업까지 기다릴 수 있다. 장시간 블로킹 작업은 엔진이 제공하는 비동기 I/O 기능이나 별도 실행 경로가 있는지 확인한다.
 
 ---
 
@@ -166,6 +181,9 @@ Async와 ThreadPool을 사용할 때의 핵심은 스레드를 많이 쓰는 것
 - 연결부: `AsyncTask(ENamedThreads::GameThread, ...)`
 
 이 원칙을 지키면 Unreal 비동기 코드에서 발생하는 대부분의 위험한 크래시를 줄일 수 있다.
+
+> [!note]
+> 이 글은 UE5 계열의 일반적인 사용 원칙을 설명한다. 실제 프로젝트에서는 사용하는 엔진 버전의 API와 스레드 안전성 문서를 함께 확인한다.
 
 ---
 

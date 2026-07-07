@@ -73,7 +73,7 @@ Thread B:     0 읽기 → 1 계산 ───→ 1 쓰기
 
 ---
 
-## Mutex와 Atomic
+## Mutex와 Atomic 비교
 
 > **Mutex는 코드 구역을 보호하고, Atomic은 변수 하나의 개별 연산을 보호한다.**
 
@@ -84,7 +84,9 @@ Thread B:     0 읽기 → 1 계산 ───→ 1 쓰기
 | 충돌 시 | 다른 스레드가 락을 기다림 | 원자 연산을 수행하며 구현에 따라 재시도 가능 |
 | 난도 | 비교적 단순 | 복합 로직에서는 어려움 |
 
-### Mutex
+---
+
+## Mutex
 
 ```cpp
 std::mutex AccountMutex;
@@ -106,7 +108,9 @@ void BuyItem()
 
 > 같은 데이터를 읽고 쓰는 모든 스레드가 **동일한 mutex**를 사용해야 한다.
 
-### Atomic
+---
+
+## Atomic
 
 ```cpp
 std::atomic<int> Counter{0};
@@ -289,7 +293,7 @@ GameThread에서 필요한 값 복사
 
 ---
 
-## 최종 정리
+## 정리
 
 ```text
 공유 제거 가능              → 공유하지 않기
@@ -311,3 +315,5 @@ mutex가 실제 병목           → 검증된 Lock-Free 구현 검토
 - [C++ Working Draft: Data Races](https://eel.is/c++draft/intro.races)
 - [C++ Working Draft: Lock-free Property](https://eel.is/c++draft/atomics.lockfree)
 - [C++ Working Draft: Progress Guarantee](https://eel.is/c++draft/basic.exec)
+
+[[Cache Locality]] · [[Async & ThreadPool]]

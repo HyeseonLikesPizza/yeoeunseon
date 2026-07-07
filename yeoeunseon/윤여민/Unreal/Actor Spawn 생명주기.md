@@ -1,14 +1,12 @@
 ---
 tags: [unreal-engine, actor, spawn, lifecycle, component]
 created: 2026-07-02
-updated: 2026-07-02
+updated: 2026-07-06
 ---
 
 # Actor Spawn 생명주기
 
 > [!summary]
-> ## 실무 핵심
->
 > ```text
 > 생성자
 > → Construction
@@ -37,9 +35,11 @@ updated: 2026-07-02
 
 ---
 
-## 꼭 알아야 하는 네 단계
+## 생명주기 단계
 
-### 1. C++ 생성자
+---
+
+## 1. C++ 생성자
 
 > **역할: 모든 인스턴스가 공통으로 가질 기본값과 기본 컴포넌트를 만든다.**
 
@@ -81,7 +81,9 @@ AMyProjectile
 > [!note]
 > 생성자가 객체의 “메모리 레이아웃을 만든다”는 뜻은 아니다. 메모리 배치는 C++ 클래스와 컴파일러가 정하고, 생성자는 값과 기본 컴포넌트를 구성한다.
 
-### 2. Construction
+---
+
+## 2. Construction
 
 > **역할: 스폰 위치와 현재 프로퍼티 값을 이용해 Actor의 외형과 구성을 완성한다.**
 
@@ -111,7 +113,9 @@ void AMyProjectile::OnConstruction(const FTransform& Transform)
 - 저장 파일 변경
 - 무거운 연산
 
-### 3. `PostInitializeComponents()`
+---
+
+## 3. `PostInitializeComponents()`
 
 > **역할: 컴포넌트 초기화가 끝난 뒤 컴포넌트 사이의 연결을 마무리한다.**
 
@@ -126,7 +130,9 @@ void AMyActor::PostInitializeComponents()
 
 대부분의 단순한 Actor에서는 직접 사용할 필요가 없다. 여러 컴포넌트가 서로 의존하고 `BeginPlay()`보다 먼저 연결되어야 할 때 사용한다.
 
-### 4. `BeginPlay()`
+---
+
+## 4. `BeginPlay()`
 
 > **역할: Actor의 실제 게임 플레이를 시작한다.**
 
@@ -237,7 +243,7 @@ if (Projectile)
 
 ---
 
-## 참고용 주요 내부 순서
+## 더 깊게: 엔진 내부 순서
 
 다음 함수 이름을 모두 외울 필요는 없다. 엔진 내부 흐름을 추적하거나 초기화 문제를 디버깅할 때 참고한다.
 
@@ -277,10 +283,10 @@ UWorld::SpawnActor()
 
 ---
 
-## 최종 정리
+## 정리
 
 ```text
-평소에는 이것만 기억
+단계별 역할
 
 생성자             기본값·기본 컴포넌트
 OnConstruction     프로퍼티 기반 외형·구성
@@ -289,7 +295,7 @@ BeginPlay          실제 게임 로직
 Deferred Spawn     Construction 전에 값 주입
 ```
 
-정확한 내부 함수 순서는 외우기보다 초기화 타이밍 문제가 생겼을 때 참고하면 된다.
+내부 함수 순서는 초기화 시점 문제를 추적할 때 확인한다.
 
 ---
 
@@ -299,3 +305,5 @@ Deferred Spawn     Construction 전에 값 주입
 - [AActor API](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/AActor)
 - [Creating Objects in Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/creating-objects-in-unreal-engine)
 - [UWorld::SpawnActorDeferred](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UWorld/SpawnActorDeferred)
+
+[[GC]] · [[Reflection]]
