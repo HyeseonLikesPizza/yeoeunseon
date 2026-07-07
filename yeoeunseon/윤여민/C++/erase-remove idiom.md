@@ -18,7 +18,7 @@ updated: 2026-07-07
 
 ---
 
-## 이 페이지에서 딱 가져갈 것
+## 핵심 정리
 
 ```text
 1. std::remove / std::remove_if는 실제 삭제가 아니다.
@@ -334,7 +334,7 @@ for (auto it = myMap.begin(); it != myMap.end(); )
 }
 ```
 
-핵심은 이것이다.
+반복자 이동 기준은 아래와 같다.
 
 ```text
 지웠다      → erase가 반환한 다음 위치 사용

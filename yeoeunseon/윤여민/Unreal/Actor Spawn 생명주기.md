@@ -1,12 +1,14 @@
 ---
 tags: [unreal-engine, actor, spawn, lifecycle, component]
 created: 2026-07-02
-updated: 2026-07-06
+updated: 2026-07-07
 ---
 
 # Actor Spawn 생명주기
 
 > [!summary]
+> Actor Spawn 생명주기는 Actor가 생성되고 게임 로직을 시작하기 전까지 어떤 순서로 초기화되는지 정리한 흐름이다.
+>
 > ```text
 > 생성자
 > → Construction
@@ -21,7 +23,7 @@ updated: 2026-07-06
 >
 > **Construction이나 BeginPlay 전에 값을 넣어야 한다면 Deferred Spawn을 사용한다.**
 
-## 이것을 왜 알아야 할까?
+## 알아야 하는 이유
 
 생성자가 `BeginPlay()`보다 먼저라는 사실만 알아도 단순한 Actor는 문제없이 만들 수 있다. 중간 과정은 엔진이 자동으로 처리하기 때문이다.
 
