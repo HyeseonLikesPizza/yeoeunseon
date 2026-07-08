@@ -1,7 +1,7 @@
 ---
 tags: [index, cpp, study-note]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-08
 ---
 
 # C++ 정리 목차
@@ -21,6 +21,7 @@ updated: 2026-07-07
 | 제네릭 프로그래밍 | [[템플릿]] | 타입이나 컴파일 타임 값을 받는 코드의 틀 |
 | 메모리 성능 | [[Cache Locality]] | 연속 메모리와 캐시 효율 |
 | 컨테이너 원소 삭제 | [[erase-remove idiom]] | `remove_if`로 모으고 `erase`로 실제 크기 줄이기 |
+| `static` 키워드 | [[static 키워드]] | 위치에 따라 수명, 링크 범위, 공유 여부, `this` 유무가 달라짐 |
 | 동시성 | [[Race Condition]] | 공유 데이터, mutex, atomic, happens-before |
 | DLL 경계 | [[DLL과 공개 C API]] | `extern "C"`, export/import, handle, 버퍼 소유권 |
 
@@ -34,6 +35,7 @@ updated: 2026-07-07
 → 가상 함수와 템플릿
 → 캐시 지역성과 컨테이너 선택
 → erase-remove idiom
+→ static 키워드
 → Race Condition과 비동기
 → DLL 공개 API
 ```
