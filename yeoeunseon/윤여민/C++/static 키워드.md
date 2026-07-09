@@ -2,7 +2,7 @@
 title: static 키워드
 tags: [cpp, static, storage-duration, linkage, class-member, memory]
 created: 2026-07-08
-updated: 2026-07-08
+updated: 2026-07-09
 ---
 
 # `static` 키워드
@@ -158,7 +158,7 @@ Count() → 3
 
 ---
 
-## 3. 클래스 `static` 멤버 변수: 객체마다가 아니라 클래스에 1개
+## 3. 클래스 `static` 멤버 변수
 
 일반 멤버 변수는 객체마다 따로 있다.
 
@@ -217,7 +217,9 @@ Player B;
 std::cout << Player::PlayerCount; // 2
 ```
 
-### 왜 클래스 밖에서 정의하나?
+---
+
+## 클래스 `static` 멤버 변수의 선언과 정의
 
 클래스 안의 이 줄은 보통 “선언”이다.
 
@@ -239,7 +241,9 @@ int Player::PlayerCount = 0;
 → 실제 메모리 공간을 만든다
 ```
 
-### C++17부터 `inline static`
+---
+
+## C++17 `inline static`
 
 C++17부터는 `inline static`을 사용하면 헤더 안에서 바로 정의할 수 있다.
 
@@ -255,7 +259,7 @@ public:
 
 ---
 
-## 4. 클래스 `static` 멤버 함수: `this`가 없다
+## 4. 클래스 `static` 멤버 함수
 
 일반 멤버 함수는 특정 객체를 대상으로 호출된다.
 
@@ -289,6 +293,10 @@ Player::PrintPlayerCount();
 ```
 
 객체 없이 호출할 수 있으므로 `this`가 없다.
+
+---
+
+## 클래스 `static` 함수와 일반 멤버 접근
 
 그래서 일반 멤버 변수에 바로 접근할 수 없다.
 
@@ -445,6 +453,8 @@ static_cast
 → 타입 변환 문법
 ```
 
+캐스팅 문법은 [[C++ 캐스팅 4종]]에서 별도로 다룬다.
+
 ---
 
 ## 언제 사용하나?
@@ -471,4 +481,4 @@ static_cast
 
 ---
 
-[[C++ 정리 목차]] · [[DLL과 공개 C API]] · [[Race Condition]]
+[[C++ 정리 목차]] · [[C++ 캐스팅 4종]] · [[DLL과 공개 C API]] · [[Race Condition]]
