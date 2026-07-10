@@ -405,4 +405,4 @@ Erase-Remove Idiom은 `remove_if`가 반환한 `newEnd`를 바로 `erase`에 넘
 
 ---
 
-[[C++ 정리 목차]] · [[Cache Locality]] · [[템플릿]]
+[[C++ 정리 목차]] · [[Cache Locality]] · [[템플릿]] · [[STL 컨테이너 선택 기준]]

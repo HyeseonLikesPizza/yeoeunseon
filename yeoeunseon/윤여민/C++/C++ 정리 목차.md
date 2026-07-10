@@ -21,6 +21,7 @@ updated: 2026-07-09
 | C++ 캐스팅 | [[C++ 캐스팅 4종]] | `static_cast`, `dynamic_cast`, `const_cast`, `reinterpret_cast` |
 | 제네릭 프로그래밍 | [[템플릿]] | 타입이나 컴파일 타임 값을 받는 코드의 틀 |
 | 메모리 성능 | [[Cache Locality]] | 연속 메모리와 캐시 효율 |
+| STL 컨테이너 | [[STL 컨테이너 선택 기준]] | 데이터 접근 패턴과 캐시 효율에 따른 적절한 컨테이너 선택 |
 | 컨테이너 원소 삭제 | [[erase-remove idiom]] | `remove_if`로 모으고 `erase`로 실제 크기 줄이기 |
 | `static` 키워드 | [[static 키워드]] | 위치에 따라 수명, 링크 범위, 공유 여부, `this` 유무가 달라짐 |
 | 동시성 | [[Race Condition]] | 공유 데이터, mutex, atomic, happens-before |
@@ -35,7 +36,7 @@ updated: 2026-07-09
 → C 문자열과 char**
 → 가상 함수와 템플릿
 → C++ 캐스팅 4종
-→ 캐시 지역성과 컨테이너 선택
+→ 캐시 지역성과 STL 컨테이너 선택
 → erase-remove idiom
 → static 키워드
 → Race Condition과 비동기
@@ -51,7 +52,7 @@ Unreal 문서에서 막히면 보통 아래처럼 돌아오면 된다.
 | `Cast<T>()`, `static_cast`, 타입 변환 | [[C++ 캐스팅 4종]], [[Reflection]] |
 | `TArray<T>`, `TMap<K, V>`, 타입별 코드 | [[템플릿]] |
 | 클래스 공용 값, 파일 내부 helper, 지연 초기화 | [[static 키워드]] |
-| 프레임 성능, 컨테이너 순회 | [[Cache Locality]], [[erase-remove idiom]] |
+| 프레임 성능, 컨테이너 순회 | [[Cache Locality]], [[STL 컨테이너 선택 기준]], [[erase-remove idiom]] |
 | Worker Thread, 공유 데이터 | [[Race Condition]] |
 | 외부 모듈과 API 경계 | [[DLL과 공개 C API]] |
 
