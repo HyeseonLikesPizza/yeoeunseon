@@ -1,7 +1,7 @@
 ---
 tags: [cpp, stl, vector, algorithm, erase-remove-idiom, container]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-16
 ---
 
 # Erase-Remove Idiom
@@ -30,7 +30,7 @@ updated: 2026-07-07
 7. erase 중 반복자는 무효화될 수 있으니 반환값으로 다음 위치를 받아야 한다.
 ```
 
-이 주제의 중심은 아래 한 줄이다.
+핵심 흐름은 이렇다.
 
 ```text
 한 번 훑어서 남길 원소를 모으고, 마지막에 한 번만 실제 크기를 줄인다.
