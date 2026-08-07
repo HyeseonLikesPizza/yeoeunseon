@@ -367,4 +367,4 @@ Enemies.Reserve(ExpectedEnemyCount);
 
 관련 키워드: `C++`, `Unreal Engine`, `TArray`, `TSet`, `TMap`, `CPU Cache`
 
-[[C++ 정리 목차]] · [[Race Condition]] · [[그래프 표현 방법과 컨테이너 선택]] · [[STL 컨테이너 선택 기준]]
+[[C++ 정리 목차]] · [[TInlineAllocator와 TChunkedArray]] · [[Race Condition]] · [[그래프 표현 방법과 컨테이너 선택]] · [[STL 컨테이너 선택 기준]]

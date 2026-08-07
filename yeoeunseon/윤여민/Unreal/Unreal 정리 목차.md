@@ -1,7 +1,7 @@
 ---
 tags: [index, unreal-engine, cpp, study-note]
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-08-08
 ---
 
 # Unreal 정리 목차
@@ -17,6 +17,7 @@ updated: 2026-07-07
 | Actor 생성 흐름 | [[Actor Spawn 생명주기]] | 생성자, Construction, 컴포넌트 초기화, BeginPlay |
 | 엔진 메타데이터 | [[Reflection]] | UHT가 타입·프로퍼티·함수 정보를 엔진용으로 생성 |
 | UObject 수명 | [[GC]] | Root Set과 참조 그래프로 UObject 정리 |
+| 메모리 할당과 배열 | [[TInlineAllocator와 TChunkedArray]] | 작은 배열의 인라인 저장과 큰 배열의 청크 저장 |
 | 비동기 작업 | [[Async & ThreadPool]] | Worker Thread에서는 계산, UObject 반영은 GameThread |
 
 ---
@@ -40,6 +41,7 @@ Async 작업은 UObject 접근 시 GameThread 규칙을 지켜야 함
 | 값은 언제 넣어야 하지? | [[Actor Spawn 생명주기]] |
 | `UPROPERTY`가 왜 중요하지? | [[Reflection]], [[GC]] |
 | 객체가 왜 갑자기 사라질 수 있지? | [[GC]] |
+| `FMemory`, `TInlineAllocator`, `TChunkedArray`가 뭘까? | [[TInlineAllocator와 TChunkedArray]] |
 | 비동기에서 Actor를 직접 만져도 되나? | [[Async & ThreadPool]] |
 | C# Reflection이랑 뭐가 다르지? | [[Reflection]], [[CSharp Reflection|C# Reflection]] |
 
@@ -52,6 +54,7 @@ Async 작업은 UObject 접근 시 GameThread 규칙을 지켜야 함
 | UObject 포인터와 유효성 | [[char 포인터와 배열]], [[가상 함수]] |
 | `UCLASS`, `UPROPERTY`, `UFUNCTION` | [[Reflection]] |
 | `TArray<T>`, `TMap<K, V>` | [[템플릿]], [[Cache Locality]] |
+| `TInlineAllocator`, `TChunkedArray` | [[Cache Locality]], [[TInlineAllocator와 TChunkedArray]] |
 | Worker Thread와 GameThread | [[Race Condition]] |
 
 ---

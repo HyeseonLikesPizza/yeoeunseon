@@ -1,7 +1,7 @@
 ---
 tags: [unreal-engine, cpp, memory-management, garbage-collection, uobject]
 created: 2026-06-23
-updated: 2026-08-06
+updated: 2026-08-08
 ---
 
 # Unreal Engine GC
@@ -11,6 +11,11 @@ updated: 2026-08-06
 > C++ 자체에는 일반적인 의미의 GC가 없기 때문에, Unreal은 `UObject`, [[Reflection]], `UPROPERTY`를 기반으로 자체 런타임 메모리 관리 체계를 만든다.
 
 ## UObject 포인터는 이것부터
+
+> [!summary]
+> **보관(Store)은 `TObjectPtr`, 사용(Borrow)은 `T*`.**
+>
+> 정확히는 `UCLASS`/`USTRUCT` 멤버로 강하게 보관할 때 `UPROPERTY() TObjectPtr<T>`를 쓰고, 함수 인수·반환값·지역 변수로 잠깐 빌려 쓸 때 `T*`를 쓴다.
 
 ```text
 UPROPERTY
@@ -177,6 +182,79 @@ EquippedWeapon = NewObject<UWeaponObject>(this);
 
 ---
 
+## Incremental GC와 Write Barrier
+
+> [!summary]
+> **Incremental Reachability Analysis**는 살아 있는 UObject를 찾는 작업을 한 프레임에 몰아서 하지 않고 여러 프레임으로 나눈다.
+> 그 사이 게임 코드가 참조를 바꿀 수 있으므로, `TObjectPtr`의 **Write Barrier**가 새 참조를 GC에 알려준다.
+
+## Incremental GC가 필요한 이유
+
+Unreal GC의 Reachability Analysis는 Root Set에서 참조 그래프를 따라가며 살아 있는 UObject를 표시하는 단계다. UObject가 많을 때 이 작업을 한 프레임에 끝내면 해당 프레임이 길어지는 **GC Hitch**가 생길 수 있다.
+
+```text
+기존 방식
+Frame N: 게임 ─ Reachability 전체 검사 ─ 게임 계속
+                    ↑ 한 프레임이 길어질 수 있음
+
+Incremental 방식
+Frame N:     게임 + Reachability 일부
+Frame N + 1: 게임 + Reachability 일부
+Frame N + 2: 게임 + Reachability 일부
+```
+
+Incremental Reachability는 프레임별 soft time limit을 두고 이 분석을 나눠 수행하여 한 프레임의 긴 정지 시간을 줄인다.
+
+## Write Barrier가 필요한 이유
+
+여러 프레임에 걸쳐 분석하는 동안 게임도 계속 실행된다.
+
+```text
+Frame 100
+GC가 Player → EnemyA 관계를 검사함
+
+Frame 101
+게임 코드가 Player.CurrentTarget을 EnemyB로 변경함
+
+문제
+GC는 Player 검사를 이미 끝냈으므로 EnemyB 참조를 놓칠 수 있음
+```
+
+```cpp
+UPROPERTY()
+TObjectPtr<AActor> CurrentTarget;
+
+CurrentTarget = EnemyB;
+```
+
+Incremental Reachability가 진행 중일 때 `UPROPERTY`로 노출된 `TObjectPtr`에 새 객체를 대입하면 엔진이 그 변경을 감지해 새 대상을 reachable로 표시한다. 이 참조 변경 감지 장치가 **GC Write Barrier**다.
+
+```text
+Incremental Reachability
+→ 분석 중 참조가 바뀔 수 있음
+→ TObjectPtr에 대입
+→ Write Barrier가 새 참조를 GC에 알림
+→ 살아 있는 객체를 놓치지 않음
+```
+
+그래서 `TObjectPtr` 권장은 단순한 코딩 스타일 문제가 아니다. Incremental Reachability를 사용할 때 `UPROPERTY` UObject 참조를 raw pointer로 남겨 두면 Write Barrier가 변경을 추적하지 못할 수 있다.
+
+> [!caution]
+> Incremental GC가 GC의 모든 단계를 하나의 기능으로 전부 나눈다는 뜻은 아니다. 여기서 말하는 핵심 기능은 **Reachability Analysis를 여러 프레임으로 나누는 것**이다. 객체 파괴와 메모리 정리에는 별도의 점진적 처리 경로가 존재할 수 있다.
+
+UE 5.8 문서 기준 Incremental Reachability Analysis는 Experimental이며 완전히 thread-safe하지 않다. 공식 문서는 worker thread에서 조작되는 객체가 조기에 수거될 수 있어 single-threaded build에서 사용하도록 안내한다. 프로젝트에 적용할 때는 사용하는 엔진 버전의 제한을 다시 확인한다.
+
+```ini
+[ConsoleVariables]
+gc.AllowIncrementalReachability=1
+gc.AllowIncrementalGather=1
+gc.IncrementalReachabilityTimeLimit=0.002
+```
+
+위 설정은 기능을 켜고 프레임당 soft time limit을 2ms로 정한 예시다. 실제 값은 UObject 수와 목표 프레임 시간으로 측정해야 한다.
+
+---
+
 ## UObject 참조 유형 선택
 
 | 참조 유형 | 객체를 살려두는가 | 주된 용도 |
@@ -194,6 +272,16 @@ EquippedWeapon = NewObject<UWeaponObject>(this);
 ## 저장하는 참조와 잠깐 쓰는 포인터
 
 `TObjectPtr`를 선택하는 기준은 `.h`와 `.cpp`가 아니다. **함수가 끝난 뒤에도 참조를 저장할 것인지**가 핵심이다.
+
+```text
+보관(Store)  → UPROPERTY() TObjectPtr<T>
+사용(Borrow) → T*
+```
+
+- **Store**: 함수가 끝난 뒤에도 멤버에 남겨 두고, 대상을 GC로부터 살려 둔다.
+- **Borrow**: 다른 곳에서 수명이 관리되는 객체를 함수 실행 중 잠깐 받아서 사용한다.
+
+대상을 저장하되 이 참조 때문에 살려 두고 싶지 않다면 Store의 예외로 `TWeakObjectPtr<T>`를 사용한다.
 
 ```cpp
 UCLASS()
@@ -266,7 +354,7 @@ TMap<FName, TObjectPtr<UAbilityData>> Abilities;
 
 중요한 것은 `TArray`는 안전하고 `TSet`/`TMap`은 위험하다는 구분이 아니다. **컨테이너가 리플렉션에 등록된 강한 UObject 참조를 담고 있는가**가 기준이다.
 
-### `TMap::Find`의 반환 타입
+## `TMap::Find`의 반환 타입
 
 ```cpp
 UPROPERTY()
@@ -290,6 +378,54 @@ UItemObject** Found = Items.Find(ItemId); // 타입이 다르므로 오류
 ```
 
 컨테이너 원소의 실제 타입을 직접 다루는 경우에는 `.cpp`에서도 `TObjectPtr<T>`가 나타날 수 있다.
+
+## `T**`를 요구하는 API에는 바로 넘길 수 없다
+
+`TObjectPtr<T>`가 `T*`처럼 사용될 수 있어도 둘의 주소 타입까지 같아지는 것은 아니다.
+
+```text
+TObjectPtr<UObject>의 주소 → TObjectPtr<UObject>*
+UObject*의 주소            → UObject**
+```
+
+```cpp
+bool FindSomething(UObject** OutObject);
+
+TObjectPtr<UObject> StoredObject;
+FindSomething(&StoredObject); // 오류: TObjectPtr<UObject>*는 UObject**가 아님
+```
+
+이 경우 API가 요구하는 raw pointer 임시 변수를 사용한 뒤 결과를 저장한다.
+
+```cpp
+UObject* RawObject = nullptr;
+
+if (FindSomething(&RawObject))
+{
+    StoredObject = RawObject;
+}
+```
+
+## raw pointer를 명시적으로 꺼낼 때
+
+함수 인수처럼 많은 문맥에서는 `TObjectPtr<T>`가 `T*`로 변환된다. 암시적 변환이 적용되지 않거나 타입을 분명히 쓰고 싶다면 `Get()` 또는 `ToRawPtr()`를 사용한다.
+
+```cpp
+AActor* RawA = CurrentTarget.Get();
+AActor* RawB = ToRawPtr(CurrentTarget);
+```
+
+`TObjectPtr` 컨테이너를 실제 원소 타입으로 순회할 때는 포인터 자체가 아니라 포인터 래퍼의 참조를 받는다.
+
+```cpp
+for (const TObjectPtr<AActor>& TargetPtr : TrackedActors)
+{
+    if (AActor* Target = TargetPtr.Get())
+    {
+        Target->SetActorHiddenInGame(false);
+    }
+}
+```
 
 ---
 
@@ -367,6 +503,7 @@ Worker Thread에서 UObject를 직접 읽거나 수정하면 GC, Destroy, 레벨
 - GC는 `UObject` 참조 그래프를 기반으로 수집 대상을 판단한다.
 - `UPROPERTY()`는 엔진이 멤버를 인식하게 하고, `TObjectPtr`는 지속적인 UObject 참조를 표현한다.
 - `UPROPERTY() TObjectPtr<T>`는 GC가 추적하는 강한 멤버 참조이며 UE5 새 코드의 기본 형태다.
+- Incremental Reachability는 도달 가능성 분석을 여러 프레임으로 나누고, `TObjectPtr`의 Write Barrier는 그 사이 생긴 새 참조를 GC에 알린다.
 - 함수 인수·반환값·지역 변수처럼 잠깐 사용하는 참조에는 일반적으로 `T*`를 쓴다.
 - `TObjectPtr`는 객체를 생성·삭제하거나 `TSharedPtr`처럼 참조 카운트를 관리하지 않는다.
 - `TWeakObjectPtr`는 대상을 살려두지 않고, `TSoftObjectPtr`는 에셋 경로를 보관한다.
@@ -382,7 +519,9 @@ Worker Thread에서 UObject를 직접 읽거나 수정하면 GC, Destroy, 레벨
 
 - [Epic Games: Object Pointers](https://dev.epicgames.com/documentation/en-us/unreal-engine/object-pointers-in-unreal-engine)
 - [Epic Games: Unreal Object Handling](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-object-handling-in-unreal-engine)
+- [Epic Games: Incremental Garbage Collection](https://dev.epicgames.com/documentation/en-us/unreal-engine/incremental-garbage-collection-in-unreal-engine)
+- [Epic Games: Unreal Engine 5 Migration Guide](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-migration-guide)
 
 ---
 
-[[Unreal 정리 목차]] · [[Reflection]] · [[Async & ThreadPool]]
+[[Unreal 정리 목차]] · [[Reflection]] · [[TInlineAllocator와 TChunkedArray]] · [[Async & ThreadPool]]
