@@ -1,5 +1,3 @@
-# TMap 조회가 특정 상황에서만 느려진 이유
-
 ## 문제 상황
 
 네가 Unreal 게임의 AI 시스템을 맡고 있다.
@@ -217,39 +215,12 @@ EnemyMap.Find(Key);
 >
 > 현재 Automation Test가 Game Thread에서 `Find()`를 호출하므로 equality 비교와 메모리 접근 비용은 Game Thread의 CPU 시간에 포함된다. Worker Thread에서 실행했다면 비용은 해당 Worker Thread에 기록된다.
 
-## 핵심 결론
-
-> [!success]- 최종 결론 확인하기
-> **한 줄 결론**
->
-> `EnemyId`를 Hash에서 빠뜨려 같은 Zone의 서로 다른 Key가 하나의 후보군에 몰렸다.
->
-> ```text
-> ZoneId만 Hash
-> → equality 50,005,000회
->
-> ZoneId + EnemyId Hash
-> → equality 11,808회
-> ```
->
-> **해결**
->
-> Key의 identity를 이루는 `ZoneId`와 `EnemyId`를 함께 Hash하고, 같은 입력으로 다시 측정한다.
->
-> **정확성이 유지된 이유**
->
-> Hash는 후보를 좁히고 `operator==`가 최종 Key를 판정했기 때문이다.
->
-> **남는 조건**
->
-> 서로 다른 Hash도 같은 Bucket에 매핑될 수 있고 Load Factor의 영향도 남는다. Chaining과 Probing은 나쁜 Hash 분포를 대신 고치는 방법이 아니다.
-
 ## 해설 2 — 테스트 검증
 
 > [!example]- 테스트 전체 보기
 > ### 테스트 실행 정보
 >
-> 제공된 Test Run 3은 이름 변경 전 경로인 `TestProject.ProblemSolving.TMapHashCollision`에서 `Success`로 완료됐다. 현재 테스트 파일은 `TMapSlowFindTest.cpp`, Automation 경로는 `TestProject.ProblemSolving.TMapSlowFind`이다. 검증할 현상은 유지하되, 코드 자체도 관찰 → 원인 분리 → 수정 → 재측정 순서로 읽히도록 재구성했다.
+> 현재 테스트 파일은 `TMapSlowFindTest.cpp`, Automation 경로는 `TestProject.ProblemSolving.TMapSlowFind`이다. 최신 실행 결과는 `Success`다.
 >
 > ### 1. 서로 다른 Key가 같은 Hash를 만드는가
 >
@@ -273,11 +244,11 @@ EnemyMap.Find(Key);
 >
 > **확인**
 >
-> `RunBadHashDifferentZoneExperiment()`과 `RunBadHashSameZoneExperiment()`은 적의 수를 모두 10,000명으로 고정한다. Hash 함수도 동일하게 나쁜 함수를 사용하고, 오직 `ZoneId` 분포만 바꾼다.
+> `MeasureBadHashWithDifferentZones()`와 `MeasureBadHashWithSameZone()`은 적의 수를 모두 10,000명으로 고정한다. Hash 함수도 동일하게 나쁜 함수를 사용하고, 오직 `ZoneId` 분포만 바꾼다.
 >
 > ```text
-> Zone 다양함 : 0.010 ms / equality=11,808
-> Zone 전부 50 : 97.623 ms / equality=50,005,000
+> Zone 다양함 : 0.012 ms / equality=11,808
+> Zone 전부 50 : 97.926 ms / equality=50,005,000
 > ```
 >
 > **결과**
@@ -301,7 +272,7 @@ EnemyMap.Find(Key);
 >
 > **확인**
 >
-> `RunEqualityExperiment()`은 같은 Hash를 갖는 `{50,1}`부터 `{50,4}`까지 넣은 뒤 `{50,3}`을 찾는다.
+> `FindOneEnemyAmongCollidingKeys()`는 같은 Hash를 갖는 `{50,1}`부터 `{50,4}`까지 넣은 뒤 `{50,3}`을 찾는다.
 >
 > ```text
 > Find({50,3}) -> "Enemy 3" / equality 비교=2
@@ -322,11 +293,11 @@ EnemyMap.Find(Key);
 >
 > **확인**
 >
-> `RunGoodHashSameZoneExperiment()`은 모든 `ZoneId`가 50인 조건을 유지하고 `HashCombineFast()`로 `EnemyId`까지 반영한다.
+> `MeasureGoodHashWithSameZone()`은 모든 `ZoneId`가 50인 조건을 유지하고 `HashCombineFast()`로 `EnemyId`까지 반영한다.
 >
 > ```text
-> BadHash 같은 Zone  : 97.623 ms / equality=50,005,000
-> GoodHash 같은 Zone :  0.013 ms / equality=11,808
+> BadHash 같은 Zone  : 97.926 ms / equality=50,005,000
+> GoodHash 같은 Zone :  0.011 ms / equality=11,808
 >
 > GoodHash {50,1}=2,654,439,028
 > GoodHash {50,2}=2,654,439,029
@@ -334,7 +305,7 @@ EnemyMap.Find(Key);
 >
 > **결과**
 >
-> 적의 수와 Key는 그대로인데 Hash만 개선하자 equality 비교가 약 4,235분의 1로 줄었다. `SameZone.Checksum == GoodHash.Checksum`도 참이므로 검색 결과는 동일하다.
+> 적의 수와 Key는 그대로인데 Hash만 개선하자 equality 비교가 약 4,235분의 1로 줄었다. `BadHashSameZone.Checksum == GoodHashSameZone.Checksum`도 참이므로 검색 결과는 동일하다.
 >
 > **주의**
 >
@@ -366,7 +337,7 @@ EnemyMap.Find(Key);
 >
 > **확인**
 >
-> `RunBadLinearProbingExperiment()`과 `RunGoodLinearProbingExperiment()`은 Unreal `TMap` 구현이 아니라 Linear Probing의 개념만 재현한다. 8개 원소가 같은 시작 Slot을 갖는 경우와 서로 다른 시작 Slot에 분산되는 경우를 비교한다.
+> `MeasureProbingWithSameStartSlot()`과 `MeasureProbingWithDistributedStartSlots()`는 Unreal `TMap` 구현이 아니라 Linear Probing의 개념만 재현한다. 8개 원소가 같은 시작 Slot을 갖는 경우와 서로 다른 시작 Slot에 분산되는 경우를 비교한다.
 >
 > ```text
 > 같은 시작 Slot : total probes=36 / max probe=8
@@ -408,9 +379,9 @@ EnemyMap.Find(Key);
 >
 > 이 테스트는 Game Thread에서 실행됐으므로 측정된 조회 비용도 Game Thread의 CPU 시간에 포함된다.
 
-## 복습
+## 결론
 
-> [!abstract]- 30초 복습
+> [!success] 이 문제에서 가져갈 것
 > **한 문장으로:** Collision은 비교 비용을 늘렸고, `operator==`는 결과의 정확성을 지켰다.
 >
 > **원인:** `ZoneId`만 Hash해서 같은 Zone의 서로 다른 Key가 같은 후보군에 집중됐다.
@@ -419,4 +390,4 @@ EnemyMap.Find(Key);
 >
 > **숫자로 확인:** equality는 `11,808 → 50,005,000 → 11,808`로 변했다.
 >
-> **남는 점:** Chaining과 Probing은 Collision 처리 방식일 뿐, 나쁜 Hash 분포 자체를 고치지는 않는다.
+> **남는 조건:** 서로 다른 Hash도 같은 Bucket에 매핑될 수 있고 Load Factor의 영향도 남는다. Chaining과 Probing은 나쁜 Hash 분포 자체를 고치지 않는다.
