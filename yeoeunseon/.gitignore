@@ -1,0 +1,5 @@
+# Generated binaries, profiler databases, and intermediate reports stay local.
+/tmp/
+
+# Keep summary CSVs and capture logs; retain detailed reports only on this PC.
+/윤여민/Problem Solvings/vector와 unordered_map 비교/실험/VTuneVector*/원본 보고서/
