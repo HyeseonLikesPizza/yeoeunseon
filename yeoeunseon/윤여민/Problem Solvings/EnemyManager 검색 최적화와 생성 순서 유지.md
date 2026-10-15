@@ -1,5 +1,3 @@
-# EnemyManager 검색 최적화와 생성 순서 유지
-
 ## 문제 상황
 
 언리얼 게임에서 적 상태를 다음처럼 관리하고 있다.
@@ -97,115 +95,31 @@ EnemyId 검색
 ## 풀이 — 생각을 마친 뒤 열기
 
 > [!question]- 1부 — CachedTarget 크래시를 따라가기
-> ### STEP 1 — 반복 검색을 캐시하면?
+> ### STEP 1 — 포인터를 캐시하면 검색을 없앨 수 있을까?
 >
-> **당시 첫 생각**
+> **`TArray` 원소 주소를 오래 저장하면 재할당 뒤 주소가 낡는다. 그 포인터는 null이 아닐 수도 있다.**
 >
-> “`FindEnemy()`를 여러 곳에서 반복하네. 한번 찾은 결과를 캐시하면 되지 않을까?”
->
-> 문제에도 이미 `FEnemyState* CachedTarget`이 있다. 그런데 적이 추가된 뒤 이 포인터를 사용하면 가끔 크래시한다.
->
-> ---
->
-> `FEnemyState*`가 기억하는 것은 Enemy의 정체성이 아니라 **현재 메모리 주소**다.
+> 처음에는 `FindEnemy()` 결과를 `CachedTarget`에 저장하면 반복 검색을 없앨 수 있다고 생각했다. 하지만 `TArray::Add()` 중 Capacity가 부족하면 원소가 더 큰 메모리로 이동한다.
 >
 > ```text
-> TArray<FEnemyState>
-> ↓
-> FEnemyState 객체가 배열의 내부 메모리에 직접 저장됨
->
-> FindEnemy()
-> ↓
-> &Enemy 반환
-> ↓
-> CachedTarget가 그 주소를 저장
-> ```
->
-> `TArray::Add()` 중 Capacity가 부족하면 더 큰 메모리를 확보하고 기존 원소를 옮길 수 있다.
->
-> ```text
-> 재할당 전 Enemy 100 주소 = 0x1000
-> CachedTarget             = 0x1000
+> 재할당 전 Enemy 100 = 0x1000
+> CachedTarget         = 0x1000
 >
 > TArray 재할당
 >
-> 재할당 후 Enemy 100 주소 = 0x5000
-> CachedTarget             = 0x1000
+> 현재 Enemy 100      = 0x5000
+> CachedTarget         = 0x1000
 > ```
 >
-> Enemy는 여전히 배열에 있지만, 이전 주소를 저장한 `CachedTarget`은 이제 **dangling pointer**다.
+> `CachedTarget != nullptr`은 주소 값이 0이 아니라는 뜻일 뿐, 지금도 같은 Enemy를 가리킨다는 뜻이 아니다. 테스트도 낡은 포인터를 역참조하지 않고 저장된 주소와 현재 주소만 비교했다.
+>
+> `TMap<int32, FEnemyState*>`에 넣어도 Value가 같은 배열 원소 주소라면 달라지지 않는다. 저장 장소가 아니라 포인터가 가리키는 대상의 lifetime이 문제다.
 >
 > ---
 >
-> ### STEP 2 — 방어 처리하면 되지 않을까?
+> ### STEP 2 — 주소 대신 무엇을 저장할까?
 >
-> **당시 다음 생각**
->
-> “사용하기 전에 null 체크하면 되는 것 아닌가?”
->
-> ```cpp
-> if (CachedTarget)
-> {
->     float HP = CachedTarget->HP;
-> }
-> ```
->
-> 이 조건이 묻는 것은 하나뿐이다.
->
-> ```text
-> CachedTarget의 주소 값이 0인가?
-> ```
->
-> 다음 질문에는 답하지 못한다.
->
-> ```text
-> 이 주소가 지금도 내가 원한 FEnemyState를 가리키는가?
-> ```
->
-> ```text
-> nullptr
-> ≠
-> dangling pointer
-> ```
->
-> 재할당 뒤에도 포인터 변수에는 예전 주소 값이 그대로 남아 있으므로 `CachedTarget != nullptr`은 참일 수 있다. 이 상태에서 역참조하면 안전하지 않다.
->
-> ---
->
-> ### STEP 3 — 유효한 주소인지 검사하면?
->
-> **당시 다음 생각**
->
-> “그러면 이 포인터가 아직 유효한 주소인지 확인하면 되지 않을까?”
->
-> 일반 `FEnemyState*`에는 객체의 수명을 추적하거나, 나중에 **같은 Enemy인지** 확인해주는 범용 장치가 없다.
->
-> ```cpp
-> // 일반 raw pointer에 이런 검사가 자동으로 제공되는 것은 아니다.
-> if (IsStillValidFEnemyStatePointer(CachedTarget))
-> {
-> }
-> ```
->
-> 메모리 주소가 읽을 수 있는 상태인지도 충분한 조건이 아니다.
->
-> ```text
-> 예전: 0x1000 = Enemy 100
-> 이동: Enemy 100 = 0x5000
-> 나중: 0x1000은 다른 데이터가 재사용할 수도 있음
-> ```
->
-> `TMap<int32, FEnemyState*>`에 넣어도 Value가 같은 `TArray` 원소 주소라면 문제는 그대로다.
->
-> **핵심**
->
-> 오래 저장한 raw pointer를 나중에 검사해서 살려내려 하지 않는다. 수명을 보장할 수 없는 주소를 장기 식별자로 사용하지 않는다.
->
-> ---
->
-> ### STEP 4 — 주소 말고 무엇을 기억해야 할까?
->
-> 여기서 주소와 정체성을 분리한다.
+> **주소 대신 Stable `EnemyId`를 오래 저장하고 현재 객체를 다시 찾는다.**
 >
 > ```text
 > FEnemyState* = Enemy가 지금 메모리 어디에 있는가
@@ -228,24 +142,22 @@ EnemyId 검색
 > }
 > ```
 >
-> `Find()`가 `nullptr`이면 **현재 그 ID의 Enemy가 없다**는 의미 있는 판단도 가능하다.
->
 > ```text
 > ID는 오래 저장
 > ↓
 > 필요할 때 Find
 > ↓
 > 반환된 pointer는 짧게 사용
-> ↓
-> 장기 저장하지 않음
 > ```
 >
-> `Find()`가 반환한 포인터도 컨테이너 변경 뒤까지 안전하다는 뜻은 아니다. 장기 보관하는 것은 ID이고, 포인터는 현재 작업 범위에서만 사용한다.
+> `Find()`가 `nullptr`이면 현재 그 ID의 Enemy가 없다고 판단할 수 있다. 반환된 포인터는 컨테이너가 바뀌지 않는 현재 작업 범위에서만 쓴다.
+>
+> Stable ID로 쓰려면 살아 있는 Enemy 사이에서 유일해야 하며, 오래된 참조가 남아 있을 때 같은 ID를 새 Enemy에게 바로 재사용하지 않는 정책도 필요하다.
 
 > [!question]- 2부 — Stable ID를 빠르게 다시 찾기
-> ### STEP 5 — 재조회 횟수부터 줄일 수 있을까?
+> ### STEP 3 — 재조회 비용을 어떻게 줄일까?
 >
-> ID로 다시 찾기로 했다고 같은 ID를 한 코드 블록에서 두 번 찾을 필요는 없다.
+> **같은 범위의 중복 `Find`부터 없애고, 남은 한 번의 조회에 맞는 구조를 비교한다.**
 >
 > ```cpp
 > if (FEnemyState* Enemy = EnemyManager.FindEnemy(EnemyId))
@@ -254,15 +166,7 @@ EnemyId 검색
 > }
 > ```
 >
-> 이 포인터 재사용은 장기 캐시가 아니다. 호출 사이에 컨테이너 변경이 없는 짧은 범위에서 방금 찾은 결과를 바로 쓰는 것이다.
->
-> **핵심:** 더 빠른 자료구조를 찾기 전에 불필요한 작업부터 제거한다.
->
-> ---
->
-> ### STEP 6 — 남은 한 번의 조회를 빠르게 만들려면?
->
-> 이제 캐시로 조회를 없애는 대신, 안정적인 ID를 빠르게 다시 찾는 구조를 비교한다.
+> 이 방식은 장기 캐시가 아니라 방금 찾은 결과를 즉시 재사용하는 것이다. 실제 테스트에서는 비교 횟수가 절반으로 줄었다.
 >
 > ```text
 > Linear Search → 정렬 불필요, 조회할 때 앞에서부터 비교
@@ -270,49 +174,20 @@ EnemyId 검색
 > TMap          → EnemyId로 직접 조회하기 적합
 > ```
 >
-> **Binary Search는 왜 정렬이 필요한가?**
->
-> Binary Search는 가운데 값을 본 뒤, 찾는 값이 더 크거나 작은지를 이용해 탐색 범위의 절반을 버린다.
->
-> **정렬된 경우**
->
-> ```text
-> 정렬된 배열 [10, 20, 30, 40, 50]
-> 찾는 값 40, 가운데 값 30
->
-> 40 > 30
-> → 30의 왼쪽에는 40이 없다고 확신
-> → 왼쪽 절반을 버릴 수 있음
-> ```
->
-> 정렬되지 않은 배열에서는 이 판단을 할 수 없다.
->
-> **정렬되지 않은 경우**
->
-> ```text
-> 정렬되지 않은 배열 [30, 10, 50, 20, 40]
-> 찾는 값 40, 가운데 값 50
->
-> 40 < 50이어도
-> 40이 가운데 값의 왼쪽에 있다는 보장이 없음
-> → 어느 절반도 안전하게 버릴 수 없음
-> ```
->
-> 따라서 `EnemyId`로 Binary Search하려면 배열도 `EnemyId` 기준으로 정렬되어 있어야 한다.
->
-> Binary Search를 실제 `Enemies`에 적용하면 생성 순서가 바뀐다.
+> Binary Search는 가운데 값을 기준으로 절반을 버리므로 `EnemyId` 정렬이 필요하다. 실제 배열을 정렬하면 생성 순서가 바뀐다.
 >
 > ```text
 > 생성 순서 [30, 10, 40, 20]
->               ↓ EnemyId 정렬
-> 정렬 결과 [10, 20, 30, 40]
+> EnemyId 정렬 [10, 20, 30, 40]
 > ```
 >
-> 빠른 알고리즘의 전제조건이 기존 요구사항과 충돌했다. 이 문제에서는 상태를 `EnemyId`로 다시 찾는 구조로 `TMap<int32, FEnemyState>`가 더 자연스럽다.
+> 생성 순서를 건드리지 않고 ID로 현재 상태를 찾는 용도에는 `TMap<int32, FEnemyState>`이 더 잘 맞는다.
 >
 > ---
 >
-> ### STEP 7 — 주소 대신 Array Index를 저장하면?
+> ### STEP 4 — 주소 대신 Index를 저장하면?
+>
+> **Index는 `RemoveAt()` 뒤 낡고, `RemoveAtSwap()`은 생성 순서를 깨뜨린다.**
 >
 > 포인터 대신 `EnemyId -> Array Index`를 저장하면 재할당으로 주소가 바뀌는 문제는 피한다.
 >
@@ -337,12 +212,12 @@ EnemyId 검색
 > 필요한 생성 순서: [100, 300, 400]
 > ```
 >
-> 주소와 Index를 캐시하는 후보가 계속 막히면서 질문이 바뀐다.
->
 > “검색과 생성 순서를 왜 하나의 컨테이너가 모두 책임지고 있지?”
 
 > [!question]- 3부 — 검색·순서·삭제의 역할 나누기
-> ### STEP 8 — 검색과 생성 순서를 분리하면?
+> ### STEP 5 — 검색과 생성 순서를 분리한다
+>
+> **검색과 생성 순서를 한 컨테이너에 맡기지 않고 책임을 분리한다.**
 >
 > ```text
 > TMap<int32, FEnemyState>    → EnemyId 검색과 살아 있는 상태
@@ -352,13 +227,11 @@ EnemyId 검색
 >
 > `CreationOrder`에는 주소나 상태를 중복 저장하지 않고 ID만 둔다. 순회할 때 ID로 Map의 현재 상태를 조회한다.
 >
-> 검색 구조를 바꿔도 생성 순서는 유지되고, 외부 시스템도 움직일 수 있는 주소를 장기 보관하지 않는다.
->
 > ---
 >
-> ### STEP 9 — Order에서 삭제는 즉시 할까, 미룰까?
+> ### STEP 6 — 삭제 비용은 언제 지불할까?
 >
-> Tombstone은 필수적인 최종 답이 아니다. `CreationOrder.RemoveAt()` 비용이 실제로 문제가 될 때 선택하는 **Lazy / Deferred Deletion 전략**이다.
+> **삭제가 드물면 즉시 제거하고, 삭제 시점의 이동 비용이 문제일 때만 Tombstone과 Compact를 쓴다.**
 >
 > ```text
 > 적이 적고 삭제가 드묾
@@ -372,13 +245,7 @@ EnemyId 검색
 > → 순회에서 Map에 없으면 건너뜀
 > ```
 >
-> Tombstone을 선택하면 삭제 시 배열을 당기는 비용을 피하지만, 죽은 ID까지 검사하는 순회 비용이 생긴다.
->
-> ---
->
-> ### STEP 10 — 미룬 비용은 언제 지불할까?
->
-> Tombstone이 충분히 쌓이면 전투·웨이브 종료 같은 안전한 시점이나 정해둔 임계치에서 살아 있는 ID만 남기도록 `Compact`한다.
+> Tombstone은 즉시 삭제 비용을 미루는 대신 죽은 ID까지 검사하게 만든다. 충분히 쌓이면 전투·웨이브 종료 같은 시점이나 정해둔 임계치에서 살아 있는 ID만 남기도록 Compact한다.
 >
 > ```text
 > 즉시 RemoveAt 비용
@@ -388,286 +255,181 @@ EnemyId 검색
 > 안전한 시점에 한꺼번에 지불
 > ```
 >
-> 비용을 없앤 것이 아니다. 현재 workload에서 덜 민감한 시점으로 옮기고, 언제 지불할지 통제한 것이다.
+> 비용을 없앤 것이 아니라 지불 시점을 옮긴 것이다. 삭제 비용이 실제 문제가 아니라면 Tombstone까지 도입할 이유는 없다.
 
-## 해설 2 — 테스트 검증
+## 테스트 — 코드로 확인한 것
 
 > [!example]- 테스트 전체 보기
-> ### 테스트 실행 정보
+> - 코드: `EnemyManagerSearchProblemTest.cpp`
+> - Automation: `TestProject.ProblemSolving.EnemyManagerSearchProblem`
+> - 수치: `TestProject-backup-2026.09.01-13.10.23.log`
 >
-> 테스트 파일은 `EnemyManagerSearchProblemTest.cpp`, Automation 경로는 `TestProject.ProblemSolving.EnemyManagerSearchProblem`이다.
+> ### 1. CachedTarget과 raw pointer
 >
-> 현재 수정본은 아래 10개 실험과 assertion을 포함한다. 시간값은 실행 환경마다 달라질 수 있으므로 비교 횟수와 상태 변화가 핵심 근거다.
->
-> ### 1. CachedTarget은 주소가 바뀐 뒤 nullptr이 될까?
->
-> **상황**
->
-> 반복 검색을 없애려고 `TArray` 원소 포인터를 저장했다.
->
-> **실험**
->
-> `AddEnemiesAfterCachingPointer()`는 `Reserve(1)` 뒤 원소를 추가해 재할당을 유도하고, 저장한 주소와 현재 원소 주소를 비교한다. 오래된 포인터는 역참조하지 않는다.
->
-> **관찰할 결과**
+> `Reserve(1)` 뒤 Enemy를 추가해 재할당을 유도했다. 낡은 포인터는 역참조하지 않고 주소만 비교했다.
 >
 > ```text
-> TArray 주소 변경             = YES
+> Capacity 1 → 18 / 1개 추가 후 주소 변경
 > CachedTarget != nullptr      = YES
 > CachedTarget == CurrentEnemy = NO
-> ```
 >
-> **판단**
->
-> null 체크는 dangling pointer를 검출하지 못한다. `nullptr`은 주소 값이 없다는 뜻이고, dangling은 주소 값은 남아 있지만 대상의 수명이 끝났거나 이동한 상태다.
->
-> **다음**
->
-> raw pointer를 나중에 검사하거나 다른 컨테이너에 저장하면 달라지는지 본다.
->
-> ---
->
-> ### 2. TMap에 raw pointer를 저장하면 달라질까?
->
-> **실험**
->
-> `StoreArrayPointerInMapThenGrowArray()`는 `TMap<int32, FEnemyState*>`에 `TArray` 원소 주소를 넣고 배열을 성장시킨다.
->
-> **관찰할 결과**
->
-> ```text
+> TMap<int32, FEnemyState*>에 저장한 경우
 > TArray 주소 변경               = YES
 > Map 포인터가 현재 원소를 가리킴 = NO
 > ```
 >
-> **판단**
->
-> 포인터를 담은 컨테이너가 문제가 아니라 포인터가 가리키는 대상의 lifetime이 문제다. 일반 raw pointer에는 같은 객체인지 사후 검증해주는 추적 정보가 없다.
->
-> **다음**
->
-> 주소 대신 Enemy의 정체성을 나타내는 ID를 저장한다.
->
 > ---
 >
-> ### 3. ID 재조회가 왜 안전한가?
->
-> **실험**
->
-> `StoreIdAndFindCurrentEnemy()`는 `CachedTargetId=200`을 저장한다. Map에 10,000개를 더 추가한 뒤 ID로 다시 찾고, Enemy 200을 삭제한 뒤 한 번 더 찾는다.
->
-> **관찰할 결과**
+> ### 2. Stable ID와 중복 Find
 >
 > ```text
 > 저장한 ID                   = 200
-> 성장 후 찾은 EnemyId        = 200
+> Map 성장 후 찾은 EnemyId     = 200
 > Enemy 200 삭제 후 Find(200) = nullptr
+>
+> 중복 Find 1,999,800 comparisons
+> 즉시 재사용 999,900 comparisons
 > ```
 >
-> **판단**
->
-> ID는 `누구인지`를 보존한다. 재조회는 현재 위치의 포인터를 새로 얻고, 삭제 뒤에는 현재 존재하지 않는다는 결과를 돌려준다.
->
-> **다음**
->
-> ID 재조회 과정에서 불필요한 호출부터 제거한다.
+> ID는 오래 보관했고, 조회로 얻은 포인터는 같은 작업 범위에서만 재사용했다.
 >
 > ---
 >
-> ### 4. 중복 Find를 제거하면?
+> ### 3. 조회 방법과 Binary Search 조건
 >
-> **실험**
->
-> `CompareDuplicateAndReusedFind()`는 같은 ID를 두 번 찾는 경우와 한 번 찾은 포인터를 같은 범위에서 즉시 재사용하는 경우를 비교한다.
->
-> **결과**
+> 같은 10,000개 Enemy에서 10,000번 조회한 결과다.
 >
 > ```text
-> 1,999,800 comparisons → 999,900 comparisons
-> ```
+> Linear 14.972 ms / 평균 비교 4,991.00
+> Binary 0.253 ms / 평균 비교 12.39
+> TMap 0.017 ms
 >
-> **판단**
->
-> 장기 raw pointer 캐시를 만들지 않고도 중복 호출을 절반으로 줄였다.
->
-> **다음**
->
-> 남은 한 번의 ID 조회 비용을 비교한다.
->
-> ---
->
-> ### 5. ID 조회 구조를 비교한다
->
-> **실험**
->
-> `CompareSearchMethods()`는 같은 ID들을 Linear Search, Binary Search, `TMap`으로 조회한다.
->
-> **이전 실행의 예시**
->
-> ```text
-> Linear 15.029 ms / 평균 비교 4991.00
-> Binary 0.249 ms / 평균 비교 12.39
-> TMap 0.018 ms
-> ```
->
-> **판단**
->
-> 안정적인 ID를 저장하는 것과 ID를 빠르게 조회하는 것은 별개의 문제다.
->
-> **다음**
->
-> Binary Search가 요구하는 정렬이 생성 순서와 충돌하는지 확인한다.
->
-> ---
->
-> ### 6. Binary Search의 조건을 확인한다
->
-> **결과**
->
-> ```text
 > 생성 순서 [30, 10, 40, 20]
-> → EnemyId 정렬 [10, 20, 30, 40]
+> EnemyId 정렬 [10, 20, 30, 40]
 > ```
 >
-> **판단**
->
-> Binary Search는 정렬된 값의 대소 관계를 근거로 탐색 범위의 절반을 버린다. 정렬되지 않았다면 어느 절반에 찾는 값이 있는지 보장할 수 없다. 따라서 `EnemyId` 기준 정렬이 필요하지만, 실제 상태 배열을 정렬하면 생성 순서가 바뀐다.
->
-> **다음**
->
-> 주소 대신 Index를 저장하는 후보를 확인한다.
+> 시간값은 실행 환경에 따라 달라진다. 비교 횟수와 정렬 뒤 순서 변화가 구조 선택의 근거다.
 >
 > ---
 >
-> ### 7. Index와 RemoveAtSwap의 한계를 확인한다
->
-> **실험 1 — EnemyId → Index**
+> ### 4. Index, RemoveAtSwap, 역할 분리
 >
 > ```text
+> RemoveAt
 > [100, 200, 300, 400] → [100, 300, 400]
 > Enemy 300의 저장된 Index=2, 실제 Index=1
-> ```
 >
-> `RemoveAt()`으로 뒤 원소가 이동하면서 Index가 낡았다.
->
-> **실험 2 — RemoveAtSwap**
->
-> ```text
+> RemoveAtSwap
 > [100, 200, 300, 400] → [100, 400, 300]
-> 요구한 생성 순서=[100, 300, 400]
-> ```
+> 필요한 생성 순서=[100, 300, 400]
 >
-> Index 수정 범위는 줄었지만 생성 순서를 깨뜨렸다.
->
-> **다음**
->
-> 검색과 생성 순서를 같은 컨테이너가 맡는 전제를 바꾼다.
->
-> ---
->
-> ### 8. 검색과 생성 순서를 분리한다
->
-> **실험**
->
-> `SeparateSearchFromCreationOrder()`는 상태를 Map에, 생성 순서를 ID 배열에 둔다.
->
-> ```text
+> 역할 분리
 > Find(20)=20
 > CreationOrder=[30, 10, 40, 20]
 > ```
 >
-> **판단**
->
-> ID 검색과 생성 순서를 각각 독립적으로 만족시켰다.
->
-> **다음**
->
-> Order 배열의 삭제 비용이 문제가 되는 workload를 가정한다.
->
 > ---
 >
-> ### 9. 삭제를 미루는 선택을 검증한다
+> ### 5. Tombstone과 Compact
 >
-> **선택 조건**
->
-> ```text
-> 적이 적고 삭제가 드물다      → 즉시 RemoveAt
-> 대량 전투에서 삭제가 빈번하다 → Tombstone 고려
-> ```
->
-> `LeaveDeadIdInCreationOrder()`는 Enemy 200을 Map에서만 삭제하고 Order에는 남긴다.
+> Map에서 Enemy 200만 삭제하고 Order 순회에서는 Map에 없는 ID를 건너뛰었다.
 >
 > ```text
 > CreationOrder=[100, 200, 300, 400]
 > 실제 순회=[100, 300, 400]
 > Tombstone=1
+>
+> 20,000개 중 생존=5,000 / Tombstone=15,000
+> Compact 전 1,000,000 checks / 0.638 ms
+> Compact 후   250,000 checks / 0.269 ms
+> Compact 자체 0.015 ms
 > ```
 >
-> **판단**
->
-> Tombstone은 필수 구조가 아니라 즉시 삭제 비용이 문제일 때 선택하는 지연 삭제다.
->
-> **다음**
->
-> 지연된 삭제가 누적됐을 때의 비용을 확인한다.
->
-> ---
->
-> ### 10. Tombstone 누적과 Compact를 비교한다
->
-> `MeasureTraversalBeforeAndAfterCompact()`는 20,000개 중 75%를 Map에서 삭제하고 Compact 전후를 같은 횟수로 순회한다.
->
-> ```text
-> Alive=5,000 / Tombstone=15,000
-> Compact 전 1,000,000 checks
-> Compact 후   250,000 checks
-> ```
->
-> **판단**
->
-> Compact 후 실제 처리 결과는 같고 검사 횟수는 4분의 1이 된다. 삭제 비용을 없앤 것이 아니라 안전한 시점의 일괄 정리 비용으로 옮겼다.
->
-> ---
->
-> ### 현재 요구사항에서 도달한 설계안
->
-> | 요구사항 | 담당 구조와 동작 |
-> |---|---|
-> | 장기 참조 | `EnemyId` 저장 |
-> | 현재 상태 접근 | `TMap<int32, FEnemyState>::Find()` 결과를 짧게 사용 |
-> | 생성 순서 순회 | `TArray<int32> CreationOrder` |
-> | 추가 | Map과 Order에 같은 ID 추가 |
-> | 일반적인 삭제 | workload가 작으면 Order에서 즉시 제거 가능 |
-> | 삭제 스파이크 완화 | 필요할 때만 Tombstone 사용 |
-> | Tombstone 정리 | 안전한 시점이나 임계치에서 Compact |
+> Compact 전후 checksum은 같았다. 이 실험은 Tombstone이 항상 더 낫다는 뜻이 아니라, 지연 삭제를 선택했을 때 생기는 순회 비용과 정리 효과를 보여준다.
 
 ## 결론
 
 > [!success] 이 문제에서 가져갈 것
-> **한 문장으로:** raw pointer는 `어디`를 가리키는지 기억하고 Stable ID는 `누구`인지 기억한다. 주소는 짧게 사용하고 ID를 오래 보관한다.
 >
-> ```text
-> 외부 시스템
-> → EnemyId를 장기 저장
-> → 필요할 때 TMap에서 현재 상태를 Find
-> → 반환된 pointer는 현재 작업에서만 사용
-> ```
->
-> **Stable ID의 조건:** 살아 있는 서로 다른 Enemy 사이에서 ID가 유일해야 하며, 오래된 참조가 남아 있을 수 있는 동안 같은 ID를 새로운 Enemy에게 함부로 재사용하지 않아야 한다. ID 재사용까지 안전하게 구분해야 한다면 `ID + Generation` 형태의 Handle로 확장할 수 있다.
->
-> **검색과 순서:** `TMap<int32, FEnemyState>`는 검색과 상태를, `TArray<int32> CreationOrder`는 생성 순서를 담당한다.
->
-> **삭제 정책:** Tombstone은 필수가 아니다. 즉시 `RemoveAt()` 비용이 실제 workload에서 문제일 때만 지연 삭제와 `Compact`를 선택한다.
->
-> **후보 해법의 한계:** `TMap<int32, FEnemyState*>`는 같은 오래된 주소를 저장한다. Index는 `RemoveAt()` 뒤 낡고, `RemoveAtSwap()`은 생성 순서를 깨뜨린다.
+> **움직일 수 있는 주소를 장기 참조로 쓰지 않는다. `EnemyId`로 현재 상태를 다시 찾고, 검색과 생성 순서는 다른 구조에 맡긴다.**
 
-### 이 문제에서 사용한 일반적인 설계 개념
+### 이번 문제의 흐름
 
-| 개념 | 이 문제에서의 의미 |
-|---|---|
-| Stable ID / Handle | 움직일 수 있는 주소 대신 `EnemyId`로 대상을 식별 |
-| Indirection | ID로 현재 저장 위치의 객체를 다시 조회 |
-| Separation of Concerns | 검색과 생성 순서를 다른 구조가 담당 |
-| Secondary Index / Ordered ID List | 상태 저장 구조와 별도로 생성 순서 ID 목록 유지 |
-| Lazy / Deferred Deletion | 즉시 삭제 비용이 문제일 때 Tombstone으로 연기 |
-| Compaction | 누적된 Tombstone을 안전한 시점에 일괄 정리 |
+```text
+반복 Find
+→ pointer를 캐시하면?
+→ TArray 재할당 뒤 주소가 낡음
+→ null 체크로도 잡히지 않음
+
+TMap에 같은 pointer를 저장하면?
+→ 낡은 주소를 다른 곳에 복사했을 뿐
+
+주소 대신 EnemyId를 저장
+→ 중복 Find를 먼저 제거
+→ 남은 조회 비용을 줄일 구조 비교
+
+Binary Search
+→ 정렬이 필요해 생성 순서와 충돌
+
+EnemyId → Index
+→ RemoveAt 뒤 Index가 낡음
+
+RemoveAtSwap
+→ 생성 순서를 깨뜨림
+
+검색과 순서를 분리
+→ TMap + CreationOrder
+
+삭제 비용이 실제 문제라면
+→ Tombstone으로 미루고 안전한 시점에 Compact
+```
+
+### 확인한 것
+
+- `TArray`가 성장하자 첫 원소의 주소가 바뀌었다. 기존 pointer는 `nullptr`이 아니었지만 현재 원소 주소와 달랐다.
+- 같은 pointer를 `TMap`에 저장해도 재할당 뒤에는 똑같이 낡았다. 테스트에서는 이 pointer를 역참조하지 않고 주소만 비교했다.
+- `EnemyId`는 배열과 Map이 성장해도 같은 Enemy를 다시 찾았고, 삭제 뒤에는 `Find()`가 `nullptr`을 반환했다.
+- 같은 범위의 중복 Find를 즉시 재사용하자 비교 횟수가 `1,999,800 → 999,900`으로 줄었다.
+- Binary Search와 `TMap`은 선형 검색보다 짧았지만, 실제 배열을 정렬하면 생성 순서가 바뀌었다.
+- 저장한 Index는 `RemoveAt()` 뒤 낡았고, `RemoveAtSwap()`은 생성 순서를 바꿨다.
+- `TMap`과 `CreationOrder`를 나누자 빠른 ID 검색과 생성 순서를 함께 유지할 수 있었다.
+- Tombstone을 Compact하자 순회 확인 횟수가 `1,000,000 → 250,000`으로 줄었고 결과 checksum은 같았다.
+
+시간값은 실행 환경에 따라 달라진다. 또한 이 테스트는 Tombstone이 언제나 더 낫다는 뜻이 아니라, 삭제 비용을 미뤘을 때 생기는 비용과 Compact 효과를 확인한 것이다.
+
+### 현재 요구사항에서의 설계
+
+```text
+외부 시스템
+→ EnemyId를 오래 보관
+
+EnemyId
+→ TMap에서 현재 EnemyState를 다시 찾음
+→ 반환된 pointer는 짧게 사용
+
+TMap
+→ 살아 있는 Enemy의 상태와 ID 검색
+
+CreationOrder
+→ 생성 순서만 보관
+
+삭제가 드물고 단순함
+→ Order에서도 즉시 제거
+
+전투 중 삭제 비용이 실제 병목임
+→ 죽은 ID를 남기고 Map에 없으면 건너뜀
+→ Tombstone이 쌓이면 안전한 시점에 Compact
+```
+
+`EnemyId`를 Stable ID로 쓰려면 살아 있는 Enemy 사이에서 유일해야 한다. 오래된 참조가 남아 있는 동안 같은 ID를 다른 Enemy에게 재사용할 수 있다면 `ID + Generation` 형태의 Handle이 필요하다.
+
+> [!note]- 부록 — 이 문제에서 나온 설계 개념
+> | 개념 | 이 문제에서의 의미 |
+> |---|---|
+> | Stable ID | 움직일 수 있는 주소 대신 `EnemyId`로 대상을 식별한다. |
+> | Handle | ID 재사용까지 구분해야 할 때 `ID + Generation`으로 참조를 강화한다. |
+> | Indirection | 주소를 오래 들고 있지 않고 ID로 현재 객체를 다시 찾는다. |
+> | Separation of Concerns | 검색·상태와 생성 순서를 다른 구조가 담당한다. |
+> | Ordered ID List | 실제 상태 저장소와 별도의 ID 목록으로 순서를 보존한다. |
+> | Deferred Deletion | 즉시 삭제 비용이 문제일 때 죽은 ID를 남겨 비용을 미룬다. |
+> | Compaction | 누적된 Tombstone을 한꺼번에 제거한다. |
