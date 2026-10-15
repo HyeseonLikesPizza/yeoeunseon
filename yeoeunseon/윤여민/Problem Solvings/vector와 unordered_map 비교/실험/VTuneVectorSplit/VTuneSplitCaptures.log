@@ -1,0 +1,28 @@
+START aos256 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_aos256_r1 -command stop.
+split_profile,aos256,n=50000,queries_per_pass=512,passes=99,elapsed_seconds=5.034681900,checksum=141802,comparisons_per_query=37360.287109375,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_aos256_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE aos256 round=1 
+START ids4 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_ids4_r1 -command stop.
+split_profile,ids4,n=50000,queries_per_pass=512,passes=1233,elapsed_seconds=5.001638300,checksum=141802,comparisons_per_query=37360.287109375,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_ids4_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE ids4 round=1 
+START ids4 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_ids4_r2 -command stop.
+split_profile,ids4,n=50000,queries_per_pass=512,passes=1233,elapsed_seconds=5.003319400,checksum=141802,comparisons_per_query=37360.287109375,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_ids4_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE ids4 round=2 
+START aos256 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_aos256_r2 -command stop.
+split_profile,aos256,n=50000,queries_per_pass=512,passes=99,elapsed_seconds=5.015846400,checksum=141802,comparisons_per_query=37360.287109375,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_split_aos256_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE aos256 round=2 

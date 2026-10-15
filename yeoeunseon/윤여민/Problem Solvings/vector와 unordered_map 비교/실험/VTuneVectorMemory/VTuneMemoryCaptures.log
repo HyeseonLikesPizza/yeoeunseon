@@ -1,0 +1,64 @@
+START vector 8 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_8_r1 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,vector,8,50000,queries_per_pass=512,passes=1139,elapsed_seconds=5.004767200,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_8_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE vector 8 round=1 
+START map 8 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_8_r1 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,map,8,50000,queries_per_pass=512,passes=3803368,elapsed_seconds=5.000000400,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_8_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE map 8 round=1 
+START vector 256 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_256_r1 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,vector,256,50000,queries_per_pass=512,passes=94,elapsed_seconds=5.042390300,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_256_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE vector 256 round=1 
+START map 256 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_256_r1 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,map,256,50000,queries_per_pass=512,passes=3785834,elapsed_seconds=5.000001800,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_256_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE map 256 round=1 
+START map 256 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_256_r2 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,map,256,50000,queries_per_pass=512,passes=3547802,elapsed_seconds=5.000001400,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_256_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE map 256 round=2 
+START vector 256 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_256_r2 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,vector,256,50000,queries_per_pass=512,passes=90,elapsed_seconds=5.097209800,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_256_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE vector 256 round=2 
+START map 8 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_8_r2 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,map,8,50000,queries_per_pass=512,passes=3714681,elapsed_seconds=5.000000700,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_map_8_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE map 8 round=2 
+START vector 8 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_8_r2 -command stop.
+profile_affinity,requested_cpu=0,current_cpu=0
+profile,vector,8,50000,queries_per_pass=512,passes=1130,elapsed_seconds=5.000323100,checksum=141802,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_memory_vector_8_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE vector 8 round=2 

@@ -1,0 +1,28 @@
+START 512 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_512_r1 -command stop.
+coverage_profile,active=512,n=50000,queries_per_pass=65536,unique=512,passes=22986,elapsed_seconds=5.000089800,checksum=35818544,equalities_per_query=1.121383667,buckets=65536,load=0.762939453,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_512_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE 512 round=1 
+START 50000 round=1 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_50000_r1 -command stop.
+coverage_profile,active=50000,n=50000,queries_per_pass=65536,unique=36587,passes=16777,elapsed_seconds=5.000210300,checksum=35852573,equalities_per_query=1.115661621,buckets=65536,load=0.762939453,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_50000_r1'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE 50000 round=1 
+START 50000 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_50000_r2 -command stop.
+coverage_profile,active=50000,n=50000,queries_per_pass=65536,unique=36587,passes=16983,elapsed_seconds=5.000251700,checksum=35852573,equalities_per_query=1.115661621,buckets=65536,load=0.762939453,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_50000_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE 50000 round=2 
+START 512 round=2 
+vtune: Collection started. To stop the collection, either press CTRL-C or enter from another console window: vtune -r C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_512_r2 -command stop.
+coverage_profile,active=512,n=50000,queries_per_pass=65536,unique=512,passes=23301,elapsed_seconds=5.000064300,checksum=35818544,equalities_per_query=1.121383667,buckets=65536,load=0.762939453,cpu=0,mismatch=0
+vtune: Collection stopped.
+vtune: Using result path `C:\Users\jan-y\Desktop\罹團\鏃機\yeoeunseon\yeoeunseon\tmp\vtune_coverage_512_r2'
+vtune: Executing actions  0 %                                                  vtune: Executing actions 100 %                                                 vtune: Executing actions 100 % done                                            
+DONE 512 round=2 
