@@ -1,0 +1,26 @@
+Grid radius correctness / no timing benchmark
+PASS neighbor across cell boundary / hits=2
+DETECTED original same-cell search misses neighbor
+DETECTED floor alone still misses neighbor
+PASS negative coordinate / hits=1
+DETECTED integer truncation selects wrong negative cell
+PASS exact negative cell edge and zero radius / hits=1
+PASS square corner excluded; radius edge included / hits=2
+PASS radius spanning more than nine cells / hits=5
+DETECTED fixed nine-cell search misses distant candidates
+PASS empty world / hits=0
+PASS 20000 enemies in one cell / hits=20000
+PASS before move / hits=1
+PASS move across cell boundary / hits=1
+PASS old position no longer hits / hits=0
+PASS move inside same cell / hits=1
+PASS move into negative cell / hits=1
+PASS deleted enemy disappears / hits=0
+PASS new enemy appears / hits=1
+PASS seeded queries / enemies=20000 / seed=17 / cell=1 / queries=200 / includes mutations
+PASS seeded queries / enemies=20000 / seed=17 / cell=4 / queries=200 / includes mutations
+PASS seeded queries / enemies=20000 / seed=17 / cell=16 / queries=200 / includes mutations
+PASS seeded queries / enemies=20000 / seed=42 / cell=1 / queries=200 / includes mutations
+PASS seeded queries / enemies=20000 / seed=42 / cell=4 / queries=200 / includes mutations
+PASS seeded queries / enemies=20000 / seed=42 / cell=16 / queries=200 / includes mutations
+SUCCESS / corrected comparisons=1214 / mismatch=0 / deliberate bug detections=4/4
